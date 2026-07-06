@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="一个有趣的贪吃蛇游戏，包含多种模式和关卡">
+    <title>灵动贪吃蛇</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏/顶部栏：游戏信息 -->
+        <header class="game-header">
+            <div class="logo">
+                <h1>SNAKE<span>.IO</span></h1>
+            </div>
+            
+            <div class="score-board">
+                <div class="score-card">
+                    <span class="label">当前得分</span>
+                    <span class="value" id="score">0</span>
+                </div>
+                <div class="score-card best">
+                    <span class="label">最高分</span>
+                    <span class="value" id="highScore">0</span>
+                </div>
+                <div class="score-card">
+                    <span class="label">速度</span>
+                    <span class="value" id="speedIndex">1</span>
+                </div>
+            </div>
+
+            <div class="game-controls-top">
+                <div class="select-wrapper">
+                    <label>难度</label>
+                    <select id="difficulty" class="custom-select">
+                        <option value="350">简单</option>
+                        <option value="250" selected>普通</option>
+                        <option value="150">困难</option>
+                        <option value="80">极速</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主游戏区域 -->
+        <main class="game-board-wrapper">
+            <div class="game-topbar">
+                <div class="level-card">
+                    <span id="levelIndicator" class="level-value">Level 1</span>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="startBtn" class="action-btn play" title="开始/暂停">
+                        <span class="icon">▶</span>
+                    </button>
+                    <button id="resetBtn" class="action-btn refresh" title="重置">
+                        <span class="icon">↻</span>
+                    </button>
+                    <button id="statsBtn" class="action-btn stats" title="统计">
+                        <span class="icon">📊</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="gameCanvas" width="400" height="400"></canvas>
+                
+                <!-- 游戏状态覆盖层 -->
+                <div id="gameOverlay" class="game-overlay">
+                    <div class="overlay-content">
+                        <h2 id="overlayTitle">准备好了吗？</h2>
+                        <p id="overlayMessage">按开始按钮或方向键开始游戏</p>
+                        <button id="overlayStartBtn" class="primary-btn pulse">开始游戏</button>
+                    </div>
+                </div>
+
+                <div id="effectIndicator" class="hud-effect" style="display: none;"></div>
+            </div>
+
+            <div class="mobile-dpad">
+                <button class="dpad-btn up" data-direction="up">▲</button>
+                <button class="dpad-btn left" data-direction="left">◀</button>
+                <button class="dpad-btn right" data-direction="right">▶</button>
+                <button class="dpad-btn down" data-direction="down">▼</button>
+            </div>
+        </main>
+
+        <!-- 底部/侧边栏：控制与说明 -->
+        <aside class="game-sidebar">
+            <div class="instructions-card">
+                <h3>道具说明</h3>
+                <ul class="legend-list">
+                    <li>
+                        <span class="legend-icon">
+                            <svg viewBox="0 0 20 20" aria-hidden="true">
+                                <circle cx="10" cy="11" r="6" fill="#ff4757" />
+                                <circle cx="7" cy="8" r="2" fill="rgba(255,255,255,0.4)" />
+                                <path d="M10 4 C9 3 8 3 7 4" stroke="#2ed573" stroke-width="1.6" fill="none" stroke-linecap="round" />
+                                <ellipse cx="12" cy="5" rx="2.2" ry="1.2" fill="#2ed573" transform="rotate(-25 12 5)" />
+                            </svg>
+                        </span>
+                        普通 (+10)
+                    </li>
+                    <li>
+                        <span class="legend-icon">
+                            <svg viewBox="0 0 20 20" aria-hidden="true">
+                                <circle cx="10" cy="10" r="6" fill="#ffa502" />
+                                <circle cx="10" cy="10" r="3.6" fill="#ffeaa7" />
+                                <polygon points="10,5.5 11.3,8.6 14.7,8.6 12,10.6 13.1,13.8 10,11.8 6.9,13.8 8,10.6 5.3,8.6 8.7,8.6" fill="#ffffff" />
+                            </svg>
+                        </span>
+                        加速 (+50)
+                    </li>
+                    <li>
+                        <span class="legend-icon">
+                            <svg viewBox="0 0 20 20" aria-hidden="true">
+                                <circle cx="10" cy="11" r="6" fill="#2f3542" />
+                                <text x="10" y="12" text-anchor="middle" font-size="8" font-weight="700" fill="#ff4757">!</text>
+                                <path d="M10 5 C11 4 12 3 13 2" stroke="#ced6e0" stroke-width="1.5" fill="none" stroke-linecap="round" />
+                                <circle cx="13.5" cy="2" r="1.2" fill="#ffa502" />
+                            </svg>
+                        </span>
+                        炸弹 (-20)
+                    </li>
+                    <li>
+                        <span class="legend-icon">
+                            <svg viewBox="0 0 20 20" aria-hidden="true">
+                                <polygon points="10,3 17,10 10,17 3,10" fill="#1e90ff" />
+                                <polygon points="10,5.8 14.2,10 10,14.2 5.8,10" fill="rgba(255,255,255,0.5)" />
+                                <path d="M10 6.2 L10 13.8 M6.2 10 L13.8 10 M7.2 7.2 L12.8 12.8 M12.8 7.2 L7.2 12.8" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round" />
+                            </svg>
+                        </span>
+                        减速 (+30)
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 统计模态框 -->
+        <div id="statsModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>游戏统计</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-label">单局最高分</span>
+                        <span class="stat-value" id="bestScore">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">游戏场次</span>
+                        <span class="stat-value" id="gamesPlayed">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">最长蛇身</span>
+                        <span class="stat-value" id="maxLength">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
